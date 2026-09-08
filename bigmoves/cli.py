@@ -52,7 +52,8 @@ def keep(moves: list[Move], min_usd: float) -> list[Move]:
 
 def row(m: Move, who: Labeler, links: bool) -> str:
     tx = ETHERSCAN_TX + m.tx if links else m.tx[:10] + ".." + m.tx[-4:]
-    return f"{money(m.usd):>8}  {m.token.symbol:<5} {amount(m.amount):>16}  {who.name(m.sender):<26} -> {who.name(m.receiver):<26} #{m.block}  {tx}"
+    return (f"{money(m.usd):>8}  {m.token.symbol:<5} {amount(m.amount):>16}  "
+            f"{who.name(m.sender):<26} -> {who.name(m.receiver):<26} #{m.block}  {tx}")
 
 
 def to_json(m: Move, who: Labeler) -> dict:
@@ -122,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_price:
         try:
             prices = fetch_prices(tokens + ([TOKENS["WETH"]] if args.eth else []))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"warning: coingecko unavailable ({exc}); only stablecoins will be priced", file=sys.stderr)
 
     try:
