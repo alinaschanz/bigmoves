@@ -3,12 +3,17 @@ name: release
 # on a published github release: build the sdist and the wheel and attach them to it.
 # nothing is uploaded to pypi; `pipx install git+https://github.com/alinaschanz/bigmoves` is the way in.
 
+# next to the two files: `SHA256SUMS`, an opentimestamps proof of it, and a build provenance
+# attestation signed by github for this workflow run (`gh attestation verify <file> --owner alinaschanz`).
+
 on:
   release:
     types: [published]
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   build:
@@ -21,6 +26,17 @@ jobs:
       - run: python -m pip install --quiet build
       - run: python -m build
       - run: python -m pip install --quiet dist/*.whl && bigmoves --version
+      - name: checksums
+        run: cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
+      - name: timestamp the checksums (opentimestamps; the proof completes after a bitcoin block)
+        continue-on-error: true
+        run: python -m pip install --quiet opentimestamps-client && ots stamp dist/SHA256SUMS
+      - name: build provenance attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/*.whl
+            dist/*.tar.gz
       - name: attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
