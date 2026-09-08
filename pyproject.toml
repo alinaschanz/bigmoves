@@ -25,6 +25,8 @@ ens = ["enslookup @ git+https://github.com/alinaschanz/ens-lookup"]
 [project.urls]
 Homepage = "https://github.com/alinaschanz/bigmoves"
 Author = "https://alinaschanz.life"
+Issues = "https://github.com/alinaschanz/bigmoves/issues"
+Changelog = "https://github.com/alinaschanz/bigmoves/blob/main/CHANGELOG.md"
 
 [project.scripts]
 bigmoves = "bigmoves.cli:main"
@@ -39,5 +41,8 @@ bigmoves = ["labels.json"]
 testpaths = ["tests"]
 
 [tool.ruff]
-line-length = 130
+line-length = 140
 target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

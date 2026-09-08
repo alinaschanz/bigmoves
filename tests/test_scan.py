@@ -1,7 +1,9 @@
 """offline: log decoding, chunking, labels, pricing, and the table with a fake node."""
 import json
 
-from bigmoves import cli, labels, prices, scan, tokens
+import pytest
+
+from bigmoves import cli, labels, prices
 from bigmoves.labels import Labeler, short
 from bigmoves.scan import Move, chunks, decode_block, decode_log
 from bigmoves.tokens import ETH, TOKENS, TRANSFER_TOPIC, by_address, pick
@@ -56,11 +58,8 @@ def test_decode_block_keeps_only_big_value_transfers():
 def test_pick_tokens():
     assert [t.symbol for t in pick(None)] == ["USDT", "USDC", "DAI", "WETH", "WBTC"]
     assert [t.symbol for t in pick("wbtc, link")] == ["WBTC", "LINK"]
-    try:
+    with pytest.raises(KeyError):
         pick("DOGE")
-        assert False, "should raise"
-    except KeyError:
-        pass
 
 
 def test_prices_and_threshold():

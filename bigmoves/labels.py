@@ -45,7 +45,7 @@ class Labeler:
             if key not in self._ens_cache:
                 try:
                     name, verified = self.ens.reverse(address)
-                except Exception:  # noqa: BLE001 - a flaky rpc must not kill the table
+                except Exception:
                     name, verified = None, None
                 self._ens_cache[key] = name if verified else None
             if self._ens_cache[key]:
