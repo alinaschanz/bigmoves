@@ -64,6 +64,13 @@ bigmoves --ens                            # name the rest with ens reverse recor
 tokens on offer: USDT, USDC, DAI, WETH, stETH, WBTC, LINK, UNI. the live test checks every
 address against `symbol()` and `decimals()` on chain, so the table cannot quietly rot.
 
+## exit codes and scripting
+
+`0` when the scan ran (even when nothing was above the threshold), `2` when no rpc answered or a
+flag was wrong. `--json` prints one object per transfer with the raw addresses next to the labels, so
+`bigmoves --json | jq -r 'select(.usd > 5e6) | .etherscan'` is the whole alerting pipeline.
+in `--follow` mode every new batch is preceded by a `-- hh:mm:ss utc, blocks a-b` line on stdout.
+
 ## the labels
 
 `bigmoves/labels.json`: about 290 addresses. exchanges (binance, coinbase, kraken, okx,
