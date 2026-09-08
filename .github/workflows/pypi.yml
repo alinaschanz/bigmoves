@@ -1,0 +1,30 @@
+name: pypi
+
+# on a published github release, when the repository variable PYPI_TRUSTED_PUBLISHING is "yes":
+# build the sdist and the wheel, check them, upload to pypi through trusted publishing (github
+# hands pypi a short-lived oidc token; no password and no api token is stored anywhere).
+# until the variable is set the job is skipped and `pipx install git+https://github.com/alinaschanz/bigmoves`
+# stays the way in. the release workflow next to this one keeps attaching the files to the release.
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    if: vars.PYPI_TRUSTED_PUBLISHING == 'yes'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - run: python -m pip install --quiet dist/*.whl && bigmoves --version
+      - uses: pypa/gh-action-pypi-publish@release/v1

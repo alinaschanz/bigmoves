@@ -5,6 +5,8 @@ versions follow [semver](https://semver.org/) as far as a command line tool has 
 
 ## [unreleased]
 
+- a pypi workflow: trusted publishing on a release, switched on by a repository variable
+
 - `--since 1h`: time windows, found by bisecting block headers
 
 - round trips inside one transaction fold into one line tagged `[round trip]`; `[mint]` and `[burn]` tags; `--raw` for every leg
