@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bigmoves"
+version = "0.1.0"
+description = "large erc-20 and eth transfers on ethereum mainnet, from a public rpc, in your terminal. no keys."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Alina Schanz" }]
+keywords = ["ethereum", "erc20", "stablecoins", "whale-alert", "onchain", "cli"]
+classifiers = [
+  "Environment :: Console",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Utilities",
+]
+
+[project.optional-dependencies]
+ens = ["enslookup @ git+https://github.com/alinaschanz/ens-lookup"]
+
+[project.urls]
+Homepage = "https://github.com/alinaschanz/bigmoves"
+Author = "https://alinaschanz.life"
+
+[project.scripts]
+bigmoves = "bigmoves.cli:main"
+
+[tool.setuptools]
+packages = ["bigmoves"]
+
+[tool.setuptools.package-data]
+bigmoves = ["labels.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 130
+target-version = "py310"
