@@ -12,7 +12,7 @@ from . import __version__
 from .labels import DEAD, ZERO, Labeler, load
 from .prices import fetch_prices, usd_value
 from .rpc import Rpc, RpcError, RpcUnavailable
-from .scan import Move, scan_eth, scan_tokens
+from .scan import Move, block_at, parse_duration, scan_eth, scan_tokens
 from .tokens import TOKENS, pick
 
 ETHERSCAN_TX = "https://etherscan.io/tx/"
@@ -122,6 +122,7 @@ def summary(moves: list[Move], from_block: int, to_block: int) -> str:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="bigmoves", description="large erc-20 and eth transfers on ethereum mainnet, from a public rpc.")
     ap.add_argument("--blocks", type=int, default=50, help="how many recent blocks to scan (default 50, about 10 minutes)")
+    ap.add_argument("--since", metavar="1h", help="scan this much time instead of a block count: 30m, 1h, 2d (a few header lookups)")
     ap.add_argument("--min-usd", type=float, default=1_000_000, help="threshold in usd (default 1,000,000)")
     ap.add_argument("--tokens", metavar="SYMBOLS", help=f"comma separated, from: {', '.join(TOKENS)} (default USDT,USDC,DAI,WETH,WBTC)")
     ap.add_argument("--eth", action="store_true", help="also plain eth transfers (needs full blocks, slower)")
@@ -161,7 +162,16 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         latest = rpc.block_number()
-        from_block, to_block = max(0, latest - args.blocks + 1), latest
+        if args.since:
+            try:
+                seconds = parse_duration(args.since)
+            except ValueError as exc:
+                print(f"error: {exc}", file=sys.stderr)
+                return 2
+            latest_ts = rpc.block_timestamp(latest)
+            from_block, to_block = block_at(rpc, latest, latest_ts - seconds, latest_ts), latest
+        else:
+            from_block, to_block = max(0, latest - args.blocks + 1), latest
         moves = scan_range(rpc, args, tokens, prices, from_block, to_block)
         emit(moves, who, args)
         if not args.json:

@@ -5,7 +5,7 @@ import pytest
 
 from bigmoves import cli, labels, prices
 from bigmoves.labels import Labeler, short
-from bigmoves.scan import Move, chunks, decode_block, decode_log
+from bigmoves.scan import Move, block_at, chunks, decode_block, decode_log, parse_duration
 from bigmoves.tokens import ETH, TOKENS, TRANSFER_TOPIC, by_address, pick
 
 BINANCE_14 = "0x28c6c06298d514db089934071355e5743bf21d60"
@@ -28,6 +28,27 @@ def test_chunks_are_inclusive_and_cover_the_range():
     assert chunks(100, 160, 25) == [(100, 124), (125, 149), (150, 160)]
     assert chunks(5, 5, 25) == [(5, 5)]
     assert chunks(10, 9, 25) == []
+
+
+def test_parse_duration():
+    assert parse_duration("1h") == 3600 and parse_duration("30m") == 1800 and parse_duration("2d") == 172_800
+    assert parse_duration("90") == 90 and parse_duration("1.5h") == 5400
+    with pytest.raises(ValueError):
+        parse_duration("soon")
+
+
+def test_block_at_bisects_on_headers():
+    calls = []
+
+    class FakeRpc:
+        def block_timestamp(self, number):
+            calls.append(number)
+            return 1_000_000 + number * 12  # a perfect 12 s chain
+
+    latest = 10_000
+    assert block_at(FakeRpc(), latest, 1_000_000 + latest * 12 - 3600) == latest - 300
+    assert len(calls) <= 12
+    assert block_at(FakeRpc(), latest, 1_000_000 + latest * 12 + 5) == latest
 
 
 def test_decode_transfer_log():
@@ -167,6 +188,30 @@ def test_cli_table_with_fake_node(monkeypatch, capsys):
     line = json.loads(capsys.readouterr().out.strip().splitlines()[0])
     assert line["usd"] == 12_500_000 and line["from_label"] == "binance 14" and line["to_label"] is None
     assert line["etherscan"].startswith("https://etherscan.io/tx/0x")
+
+
+def test_cli_since_uses_headers(monkeypatch, capsys):
+    class FakeRpc:
+        def __init__(self, urls=None):
+            self.scanned = []
+
+        def block_number(self):
+            return 10_000
+
+        def block_timestamp(self, number):
+            return 1_000_000 + number * 12
+
+        def call(self, method, params):
+            self.scanned.append((int(params[0]["fromBlock"], 16), int(params[0]["toBlock"], 16)))
+            return []
+
+    rpcs = []
+    monkeypatch.setattr(cli, "Rpc", lambda urls=None: rpcs.append(FakeRpc()) or rpcs[-1])
+    monkeypatch.setattr(cli, "fetch_prices", lambda tokens: {})
+    assert cli.main(["--since", "1h", "--tokens", "USDT"]) == 0
+    assert rpcs[0].scanned[0][0] == 10_000 - 300 and rpcs[0].scanned[-1][1] == 10_000
+    assert "blocks 9,700-10,000" in capsys.readouterr().out
+    assert cli.main(["--since", "soon"]) == 2
 
 
 def test_cli_rejects_unknown_token():

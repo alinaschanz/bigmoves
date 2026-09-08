@@ -61,3 +61,9 @@ class Rpc:
 
     def block_number(self) -> int:
         return int(self.call("eth_blockNumber", []), 16)
+
+    def block_timestamp(self, number: int) -> int:
+        block = self.call("eth_getBlockByNumber", [hex(number), False])
+        if not block:
+            raise RpcError(f"block {number} not found")
+        return int(block["timestamp"], 16)

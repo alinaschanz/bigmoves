@@ -25,6 +25,33 @@ class Move:
         return self.tx, self.log_index
 
 
+def parse_duration(text: str) -> int:
+    """'90m', '1h', '2d', '3600s' -> seconds."""
+    text = text.strip().lower()
+    units = {"s": 1, "m": 60, "h": 3600, "d": 86400}
+    unit = text[-1] if text and text[-1] in units else "s"
+    number = text[:-1] if text and text[-1] in units else text
+    if not number.replace(".", "", 1).isdigit():
+        raise ValueError(f"cannot read a duration from {text!r}")
+    return int(float(number) * units[unit])
+
+
+def block_at(rpc: Rpc, latest: int, target_ts: int, latest_ts: int | None = None) -> int:
+    """the first block whose timestamp is at or after target_ts: a guess at 12 s per block, then a few
+    bisection steps on block headers. two to six extra calls."""
+    latest_ts = rpc.block_timestamp(latest) if latest_ts is None else latest_ts
+    if target_ts >= latest_ts:
+        return latest
+    lo, hi = max(0, latest - (latest_ts - target_ts) // 12 - 100), latest
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if rpc.block_timestamp(mid) < target_ts:
+            lo = mid + 1
+        else:
+            hi = mid
+    return lo
+
+
 def chunks(from_block: int, to_block: int, size: int) -> list[tuple[int, int]]:
     """inclusive (start, end) pairs of at most `size` blocks."""
     out = []

@@ -51,6 +51,7 @@ or clone it and run `python -m bigmoves` from the folder. python 3.10 or newer, 
 ```
 bigmoves                                  # last 50 blocks, at least $1m, usdt usdc dai weth wbtc
 bigmoves --blocks 300 --min-usd 5000000   # last hour, $5m and up
+bigmoves --since 90m                      # a time window instead of a block count (a few header lookups)
 bigmoves --tokens USDT,USDC --follow      # keep watching, new blocks every 12 s
 bigmoves --eth                            # plain eth transfers too (full blocks, slower)
 bigmoves --links                          # etherscan links instead of short hashes
