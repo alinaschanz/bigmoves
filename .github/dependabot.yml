@@ -1,0 +1,8 @@
+# the code has no dependencies; this keeps the github actions pinned in the workflows current.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: ["dependencies"]

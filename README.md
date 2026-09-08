@@ -3,6 +3,7 @@
 [![ci](https://github.com/alinaschanz/bigmoves/actions/workflows/ci.yml/badge.svg)](https://github.com/alinaschanz/bigmoves/actions/workflows/ci.yml)
 ![python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab)
 ![license mit](https://img.shields.io/badge/license-MIT-2b7a74)
+[![release](https://img.shields.io/github/v/release/alinaschanz/bigmoves?color=2b7a74)](https://github.com/alinaschanz/bigmoves/releases)
 
 large erc-20 and eth transfers on ethereum mainnet, from a public rpc, in your terminal.
 no keys, nothing to install.
