@@ -5,6 +5,8 @@ versions follow [semver](https://semver.org/) as far as a command line tool has 
 
 ## [unreleased]
 
+- labels: morpho blue (the flash loans that look like the biggest moves of the hour)
+
 - a pypi workflow: trusted publishing on a release, switched on by a repository variable
 
 - `--since 1h`: time windows, found by bisecting block headers
