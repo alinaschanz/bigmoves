@@ -18,6 +18,7 @@ class Move:
     receiver: str
     log_index: int = 0
     usd: float | None = None
+    tag: str = ""  # "round trip", "mint", "burn" once grouped; empty for a plain transfer
 
     @property
     def key(self) -> tuple[str, int]:
