@@ -99,6 +99,47 @@ def test_money_and_amount_formatting():
     assert cli.amount(12_500_000) == "12,500,000" and cli.amount(3.14159) == "3.14"
 
 
+def test_group_folds_round_trips_and_tags_mints():
+    weth, usdt = TOKENS["WETH"], TOKENS["USDT"]
+    out_leg = Move(1, "0xf", weth, 10_432.03, SOMEONE, BINANCE_14, log_index=3)
+    back_leg = Move(1, "0xf", weth, 10_432.03, BINANCE_14, SOMEONE, log_index=9)
+    mint = Move(1, "0xm", usdt, 5e6, labels.ZERO, SOMEONE, log_index=1)
+    burn = Move(1, "0xb", usdt, 1e6, SOMEONE, labels.DEAD, log_index=2)
+    plain = Move(1, "0xp", usdt, 2e6, SOMEONE, BINANCE_14, log_index=4)
+    grouped = cli.group([out_leg, back_leg, mint, burn, plain])
+    assert [m.tx for m in grouped] == ["0xf", "0xm", "0xb", "0xp"]
+    assert grouped[0].tag == "round trip" and grouped[1].tag == "mint" and grouped[2].tag == "burn" and grouped[3].tag == ""
+    # a different amount on the way back is not a round trip
+    other = Move(1, "0xf", weth, 10_000.0, BINANCE_14, SOMEONE, log_index=9)
+    assert [m.tag for m in cli.group([Move(1, "0xf", weth, 10_432.03, SOMEONE, BINANCE_14, log_index=3), other])] == ["", ""]
+
+
+def test_cli_raw_keeps_both_legs(monkeypatch, capsys):
+    weth = TOKENS["WETH"]
+
+    class FakeRpc:
+        def __init__(self, urls=None):
+            pass
+
+        def block_number(self):
+            return 199
+
+        def call(self, method, params):
+            lo, hi = int(params[0]["fromBlock"], 16), int(params[0]["toBlock"], 16)
+            found = [log(weth, SOMEONE, BINANCE_14, 10_000 * 10**18, block=150, index=1),
+                     log(weth, BINANCE_14, SOMEONE, 10_000 * 10**18, block=150, index=2)]
+            return [entry for entry in found if lo <= int(entry["blockNumber"], 16) <= hi]
+
+    monkeypatch.setattr(cli, "Rpc", FakeRpc)
+    monkeypatch.setattr(cli, "fetch_prices", lambda tokens: {"ethereum": 2500.0})
+    assert cli.main(["--tokens", "WETH"]) == 0
+    out = capsys.readouterr().out
+    assert out.count("0x11111111..1111") == 1 and "[round trip]" in out and "1 transfers" in out
+    assert cli.main(["--tokens", "WETH", "--raw"]) == 0
+    out = capsys.readouterr().out
+    assert out.count("0x11111111..1111") == 2 and "[round trip]" not in out and "2 transfers" in out
+
+
 def test_cli_table_with_fake_node(monkeypatch, capsys):
     usdt = TOKENS["USDT"]
 

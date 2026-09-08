@@ -31,10 +31,11 @@ $ bigmoves --blocks 50 --min-usd 1000000
 14 transfers in blocks 25,929,279-25,929,328 (50 blocks, ~10 min): $94.5m total (WETH $52.1m, USDT $31.7m, USDC $7.6m, DAI $3.1m)
 ```
 
-the first two lines are one transaction: 10k weth out and back in the same block, which
-is what a flash loan looks like from here. the three dai/usdc lines at the bottom share
-a hash too: a dai mint, a hop, and the usdc that paid for it. a transfer is not a trade;
-the labels and the etherscan link tell the rest.
+the two weth lines at the top are one transaction: 10k weth out and back in the same
+block, which is what a flash loan looks like from here. since 0.2 that pair is folded into
+one line tagged `[round trip]`, transfers from 0x0 are tagged `[mint]` and transfers to 0x0
+or 0xdead `[burn]`; `--raw` prints every leg like above. a transfer is not a trade; the
+labels and the etherscan link tell the rest.
 
 ## install
 
@@ -55,6 +56,7 @@ bigmoves --eth                            # plain eth transfers too (full blocks
 bigmoves --links                          # etherscan links instead of short hashes
 bigmoves --json | jq .                    # json lines
 bigmoves --labels mine.json               # your own {address: label} on top of the built-in list
+bigmoves --raw                            # every transfer leg on its own line, no folding, no tags
 bigmoves --ens                            # name the rest with ens reverse records (needs enslookup)
 ```
 
